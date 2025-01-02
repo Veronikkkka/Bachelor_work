@@ -77,17 +77,40 @@ val_loader = DataLoader(validation_dataset, batch_size=16, shuffle=False)
 
 
 
-# Example
-for batch in train_loader:
-    images = batch['image']
-    paths = batch['path']
+# # Example
+# for batch in train_loader:
+#     images = batch['image']
+#     paths = batch['path']
     
-    print(f"Batch size: {images.size()}")
-    print(f"Sample paths: {paths[:3]}")
+#     print(f"Batch size: {images.size()}")
+#     print(f"Sample paths: {paths[:3]}")
     
-    import matplotlib.pyplot as plt
-    plt.imshow(images[0].permute(1, 2, 0))
-    plt.title(paths[0])
-    plt.axis('off')
+#     import matplotlib.pyplot as plt
+#     plt.imshow(images[0].permute(1, 2, 0))
+#     plt.title(paths[0])
+#     plt.axis('off')
+#     plt.show()
+#     break
+
+
+import random
+import matplotlib.pyplot as plt
+
+def show_random_images(dataset, num_images=5):
+    fig, axes = plt.subplots(1, num_images, figsize=(15, 5))
+    
+    for i in range(num_images):
+        random_idx = random.randint(0, len(dataset) - 1)
+        sample = dataset[random_idx]
+        image = sample['image']
+
+        image = transforms.ToPILImage()(image)
+        
+        ax = axes[i]
+        ax.imshow(image)
+        ax.axis('off')
+        ax.set_title(f"Image {random_idx}")
+        
     plt.show()
-    break
+
+show_random_images(dataset, num_images=5)
