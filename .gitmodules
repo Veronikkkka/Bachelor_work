@@ -1,0 +1,4 @@
+[submodule "submodules/DinoBloom"]
+	path = submodules/DinoBloom
+	url = hhttps://github.com/Veronikkkka/DinoBloom.git
+	branch = my-feature-branch
