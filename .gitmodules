@@ -1,0 +1,3 @@
+[submodule "submodules/DinoBloom"]
+	path = submodules/DinoBloom
+	url = https://github.com/Veronikkkka/DinoBloom.git
