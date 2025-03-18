@@ -1,3 +1,6 @@
 [submodule "submodules/DinoBloom"]
 	path = submodules/DinoBloom
 	url = https://github.com/Veronikkkka/DinoBloom.git
+[submodule "dinov2"]
+	path = dinov2
+	url = https://github.com/Veronikkkka/dinov2.git
