@@ -92,8 +92,7 @@ def apply_ccm(image, ccm):
 
 def mosaic(img):
     """Extracts RGGB Bayer planes from an RGB image."""
-    #image.shape.assert_is_compatible_with((None, None, 3))
-    #shape = tf.shape(image)
+
     shape = img.shape
     
     red = img[:, 0::2, 0::2, 0]
@@ -109,28 +108,25 @@ def mosaic(img):
 # 1.inverse tone, 2.inverse gamma, 3.sRGB2cRGB, 4.inverse WB digital gains
 def Unprocess(img):
     
-    img1 = img.permute(0,2,3,1) # (B, H, W, C)
-    # inverse tone mapping
+    img1 = img.permute(0,2,3,1)
+
     img1 = 0.5 - torch.sin(torch.asin(1.0 - 2.0 * img1) / 3.0)
-    
-    # inverse gamma
+
     epsilon = torch.FloatTensor([1e-8]).to(img.device)
     gamma = random.uniform(2.0, 3.5)
     img2 = torch.max(img1, epsilon) ** gamma
     
-    # sRGB2cRGB
+
     xyz2cam = random.choice(xyz2cams)
     rgb2cam = np.matmul(xyz2cam, rgb2xyz)
     rgb2cam = torch.from_numpy(rgb2cam / np.sum(rgb2cam, axis=-1)).to(torch.float).to(img.device)
     img3 = apply_ccm(img2, rgb2cam)
     
-    # Mosaicing
     img4 = mosaic(img3).permute(0,3,1,2)
     
     return img4
 
 def load_image(image_path):
-    # Open the image using Pillow
     image = Image.open(image_path).convert('RGB')
     width, height = image.size
     if width % 2 != 0:
@@ -138,26 +134,23 @@ def load_image(image_path):
     if height % 2 != 0:
         height += 1
     image = image.resize((width, height))
-    # Convert the image to a numpy array
     image = np.array(image)
     
-    # Normalize the image to [0, 1] range and convert to tensor
     image_tensor = torch.tensor(image, dtype=torch.float32) / 255.0
     
-    # Convert the image to [B, C, H, W] format as expected by your functions
-    image_tensor = image_tensor.permute(2, 0, 1).unsqueeze(0)  # shape: (1, C, H, W)
+
+    image_tensor = image_tensor.permute(2, 0, 1).unsqueeze(0)
     
     return image_tensor
 
 from PIL import Image
 def save_image(img_tensor, save_path):
-    # Convert the image tensor to PIL Image
+
     img_pil = Image.fromarray((img_tensor.squeeze().permute(1, 2, 0).numpy() * 255).astype(np.uint8))
 
     if img_pil.mode == 'RGBA':
         img_pil = img_pil.convert('RGB')
 
-    # Save the image    
     img_pil.save(save_path)
 
 import os
@@ -173,8 +166,8 @@ def save_unprocessed_images(image_dir, output_dir):
 
             image_path = os.path.join(image_dir, image_name)
             # img_tensor = load_image(image_path)
-            img = cv2.imread(image_path)  # BGR format by default
-            
+            img = cv2.imread(image_path)
+            print("imag", img.shape)
 
             image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             height, width, _ = image.shape
@@ -192,25 +185,24 @@ def save_unprocessed_images(image_dir, output_dir):
             # print(img_tensor)
             # img_tensor = load_image(image_path)
             
-            img_out = Unprocess(img_tensor.unsqueeze(0))  # Add batch dimension: (1, C, H, W)
+            img_out = Unprocess(img_tensor.unsqueeze(0))
             # print(img_out)
-            print(f"Output min: {img_out.min()}, max: {img_out.max()}")
-            # print(img_out.shape)
+            print(img_out.shape)
             
             output_path = os.path.join(output_dir, f"{image_name.replace('.jpg', '.npy')}")
             # save_image(img_out, output_path)
             np.save(output_path, img_out.squeeze().cpu().numpy()) 
 
 if __name__ == '__main__':
-    image_dir = "/home/paperspace/Documents/nika_space/ADE20K/ADEChallengeData2016/images/training_raw/"  # Update with the correct path
-    output_dir = "/home/paperspace/Documents/nika_space/main_dataset/ade/images"  #
+    image_dir = "/home/paperspace/Documents/nika_space/ADE20K/ADEChallengeData2016/images/training_raw/" 
+    output_dir = "/home/paperspace/Documents/nika_space/main_dataset/ade/images"  
     save_unprocessed_images(image_dir, output_dir)
 
     # img_input = load_image('/home/paperspace/Documents/nika_space/ADE20K/ADEChallengeData2016/images/training_raw/ADE_train_00000035.jpg')
     
 
     # img_out = Unprocess(img_input)
-    # print(img_out.shape)  # Print the output shape
+    # print(img_out.shape)
     
     # save_image(img_out, 'path_to_save_unprocessed_image.jpg')
 

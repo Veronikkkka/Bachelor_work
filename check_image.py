@@ -9,15 +9,15 @@ def save_npy_as_image(npy_file, output_file="output.png"):
         npy_file (str): Path to the .npy file.
         output_file (str): Path where the image will be saved.
     """
-    # Load the image
+
     image = np.load(npy_file)
 
-    # # Normalize if needed (scale to 0-255 for uint8 format)
+
     # if image.dtype != np.uint8:
     #     image = (image - image.min()) / (image.max() - image.min()) * 255
     #     image = image.astype(np.uint8)
 
-    # Convert to PIL Image
+
     if len(image.shape) == 2:  # Grayscale
         img = Image.fromarray(image, mode="L")
     else:  # RGB
@@ -26,8 +26,8 @@ def save_npy_as_image(npy_file, output_file="output.png"):
     img.save(output_file)
 #     print(f"Image saved as {output_file}")
 
-# # Example usage
-npy_file = "/home/paperspace/Documents/nika_space/main_dataset/ade/images/ADE_train_00000683.npy"  # Change path as needed
+
+npy_file = "/home/paperspace/Documents/nika_space/main_dataset/ade/images/ADE_train_00000683.npy"
 # save_npy_as_image(npy_file, "visualized_image.png")
 
 import numpy as np
@@ -39,11 +39,10 @@ def visualize_npy_image(npy_path):
 
     print(f"Image shape: {img.shape}, dtype: {img.dtype}, min: {img.min()}, max: {img.max()}")
 
-    # If grayscale, show in cmap='gray'
     if img.ndim == 2 or (img.ndim == 3 and img.shape[-1] == 1):
         plt.imshow(img, cmap='gray')
     else:
-        plt.imshow(img)  # Assume RGB
+        plt.imshow(img)
 
     plt.axis("off")
     plt.show()
@@ -72,12 +71,7 @@ def raw_to_rgb(raw_path, normalize: bool = True) -> Image.Image:
 
 import numpy as np
 import cv2
-# if __name__ == "__main__":
-#     parser = argparse.ArgumentParser(description="Visualize an .npy image file")
-#     parser.add_argument("npy_path", type=str, help="Path to the .npy image file")
-    
-#     args = parser.parse_args()
-#     visualize_npy_image(args.npy_path)
+
 
 import numpy as np
 from PIL import Image
@@ -113,8 +107,7 @@ def save_image_from_npy(npy_file, save_path):
     img_pil.save(save_path)
     print(f"Image saved as {save_path}")
 
-# Example usage:
-# save_image_from_npy(npy_file, 'output_image.png')
+
 
 import numpy as np
 from PIL import Image
@@ -246,18 +239,18 @@ def process_npy_files(input_dir, output_dir):
 
 def process_single_npy(input_path):
     raw_data = np.load(input_path)
-    # print(raw_data.shape)
+    print("raw" , raw_data.shape)
     
     rgb_image = raw_to_rgb(raw_data)
     
     file_base = os.path.splitext(os.path.basename(input_path))[0]
-    
+        
 
     bayer_output_path = f"{file_base}_bayer.png"
     Image.fromarray(rgb_image).save(bayer_output_path)
      
     demosaiced = demosaic(rgb_image)
-
+    print(demosaiced.shape)
     demosaic_output_path = f"{file_base}_rgb.png"
     Image.fromarray(demosaiced).save(demosaic_output_path)
     print(demosaic_output_path)
@@ -266,10 +259,19 @@ def process_single_npy(input_path):
 
 if __name__ == "__main__":
 
-    # input_dir = "/path/to/your/npy/files"
-    # output_dir = "/path/to/save/rgb/images"
-    # process_npy_files(input_dir, output_dir)
     
-    input_path = "/home/paperspace/Documents/nika_space/main_dataset/ade/images/ADE_train_00000683.npy"
-    output_dir = ""
-    process_single_npy(input_path, output_dir)
+    input_path = "/home/paperspace/Documents/nika_space/main_dataset/challenge/images/8.npy"
+    
+    # process_single_npy(input_path)
+    input_path = "/home/paperspace/Documents/nika_space/main_dataset/train/raise/images/r0a2ff882t.npy"
+    
+    # process_single_npy(input_path)
+
+    input_path = "/home/paperspace/Documents/nika_space/main_dataset/train/ade/images/ADE_train_00000004.npy"
+    
+    # process_single_npy(input_path)
+
+    path = "/home/paperspace/Documents/nika_space/main_dataset/train/raw_nod/DSC_5122.npy"
+    process_single_npy(path)
+
+

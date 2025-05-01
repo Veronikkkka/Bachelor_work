@@ -3,73 +3,80 @@ import numpy as np
 import cv2
 from pathlib import Path
 from tqdm import tqdm
-
+import rawpy
 # ADE 20K dataset
 
 
 image_dir = "/home/paperspace/Documents/nika_space/ADE20K/ADEChallengeData2016/images/training_raw_low/"  # Update with the correct path
-output_dir = "/home/paperspace/Documents/nika_space/ADE20K_npy/training_raw_low/"  # Output directory for .npy files
+output_dir = "/home/paperspace/Documents/nika_space/main_dataset/ade/images"  # Output directory for .npy files
 
 import cv2
 import numpy as np
 from pathlib import Path
 from tqdm import tqdm
 
-def convert_images_to_npy(image_dir, output_dir):
-    """
-    Converts all images in a directory to .npy format and saves them in the output directory.
 
+
+def convert_rgb_to_bayer_4channel(rgb_image):
+    """
+    Convert an RGB image to a simulated Bayer RGGB pattern with 4 separate channels.
+    
+    Returns:
+        (H, W, 4) NumPy array with [R, G1, G2, B] channels.
+    """
+    h, w = rgb_image.shape[:2]
+    
+
+    bayer = np.zeros((h, w, 4), dtype=np.uint8)
+    
+
+    bayer[0::2, 0::2, 0] = rgb_image[0::2, 0::2, 0]  # R
+    bayer[0::2, 1::2, 1] = rgb_image[0::2, 1::2, 1]  # G1
+    bayer[1::2, 0::2, 2] = rgb_image[1::2, 0::2, 1]  # G2
+    bayer[1::2, 1::2, 3] = rgb_image[1::2, 1::2, 2]  # B
+    
+    return bayer
+
+def convert_ade_to_bayer_npy(input_folder, output_folder, keep_original=True):
+    """
+    Convert ADE20K dataset images to simulated Bayer pattern and save as .npy files
+    
     Args:
-        image_dir (str): Path to the directory containing images.
-        output_dir (str): Path to the directory where .npy files will be stored.
+        input_folder: Path to folder containing ADE20K images
+        output_folder: Path to save processed files
+        keep_original: If True, also save the original RGB data
     """
-    image_dir = Path(image_dir)
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)  # Create output directory if it doesn't exist
 
-    image_paths = sorted(list(image_dir.rglob("*.jpg")) + list(image_dir.rglob("*.JPEG")))
+    os.makedirs(output_folder, exist_ok=True)
 
-    if not image_paths:
-        raise ValueError(f"No images found in directory: {image_dir}")
+    image_files = [f for f in os.listdir(input_folder) if f.lower().endswith('.jpg')]
+    
+    print(f"Found {len(image_files)} images to process.")
 
-    print(f"Converting {len(image_paths)} images to .npy format...")
-
-    for image_path in tqdm(image_paths, desc="Processing Images"):
-        # Read image using OpenCV
-        image = cv2.imread(str(image_path), cv2.IMREAD_UNCHANGED)
-        
-        if image is None:
-            print(f"Warning: Unable to load image {image_path}. Skipping...")
-            continue
-        
-        # Determine the number of channels
-        if len(image.shape) == 2:
-            # Single-channel image (grayscale or RAW)
-            image = image[:, :, np.newaxis]  # Add channel dimension
-        elif len(image.shape) == 3 and image.shape[2] == 3:
-            # Convert BGR to RGB for standard 3-channel images
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        elif len(image.shape) == 3 and image.shape[2] == 4:
-            # 4-channel image (e.g., RGGB pattern)
-            pass  # No conversion needed
-        else:
-            print(f"Warning: Unexpected number of channels in image {image_path}. Skipping...")
-            continue
-
-        raw_img = image.astype(np.float32)
-
-        raw_max = raw_img.max()
+    for image_file in tqdm(image_files, desc="Converting ADE20K images"):
+        input_path = os.path.join(input_folder, image_file)
         
 
-        normalized_img = (raw_img / raw_max).astype(np.float32)
+        base_name = os.path.splitext(image_file)[0]
+        
+        try:
 
-        # Save the image as a .npy file
-        npy_filename = output_dir / f"{image_path.stem}.npy"
-        np.save(npy_filename, normalized_img)
+            original_img = cv2.imread(input_path, cv2.IMREAD_UNCHANGED)
+            
+            if original_img is None:
+                print(f"Warning: Could not read image {image_file}")
+                continue
 
-    print(f"Conversion complete! Images saved in {output_dir}")
-
-# convert_images_to_npy(image_dir, output_dir)
+            bayer_img = convert_rgb_to_bayer_4channel(original_img)
+            
+            output_path = os.path.join(output_folder, f"{base_name}.npy")
+            np.save(output_path, bayer_img)
+                
+        except Exception as e:
+            print(f"Error processing {image_file}: {str(e)}")
+    
+    print(f"All images converted and saved to {output_folder}")
+# convert_ade_to_bayer_npy(image_dir, output_dir, keep_original=False)
 
 # Challenge train_raw dataset
 import numpy as np
@@ -83,13 +90,9 @@ def normalize_image(img_array):
     :param img_array: Input NumPy array
     :return: Normalized image array
     """
-    # Convert to float32
     raw_img = img_array.astype(np.float32)
-    
-    # Find the max value for normalization
     raw_max = raw_img.max()
-    
-    # Normalize by dividing by max value
+
     normalized_img = (raw_img / raw_max).astype(np.float32)
     
     return normalized_img
@@ -101,54 +104,46 @@ def extract_images_and_keywords(csv_file, output_folder):
     :param csv_file: Path to the input CSV file
     :param output_folder: Folder to save extracted images and labels
     """
-    # Create output folders if they don't exist
+
     os.makedirs(output_folder, exist_ok=True)
     os.makedirs(os.path.join(output_folder, 'images'), exist_ok=True)
-    
-    # Path for the labels file
+
     labels_file_path = os.path.join(output_folder, 'labels.txt')
-    
-    # Open labels file in write mode
+
     with open(csv_file, 'r', encoding='utf-8') as input_file, \
          open(labels_file_path, 'w', encoding='utf-8') as labels_file:
         
         csv_reader = csv.DictReader(input_file)
-        
-        # Process each row in the CSV
+
         for row in csv_reader:
-            # Extract file identifier and keywords
+ 
             file_id = row['File']
             keywords = row['Keywords']
-            
-            # NEF file URL (or TIFF if preferred)
+ 
             image_url = row['NEF']
             
-            # Skip if no URL or keywords
+
             if not image_url or not keywords:
                 continue
             
             try:
-                # Download the image file
+
                 response = requests.get(image_url)
                 
-                # Ensure successful download
+
                 if response.status_code == 200:
-                    # Open image from bytes
+ 
                     with Image.open(io.BytesIO(response.content)) as img:
-                        # Convert image to NumPy array
+
                         img_array = np.array(img)
-                        
-                        # Normalize the image
+
                         img_normalized = normalize_image(img_array)
-                        
-                        # Construct NPY filename
+
                         npy_filename = f"{file_id}.npy"
                         npy_path = os.path.join(output_folder, 'images', npy_filename)
-                        
-                        # Save normalized NumPy array
+
                         np.save(npy_path, img_normalized)
-                    
-                    # Write image filename and its keywords to labels file
+
                     labels_file.write(f"{npy_filename}: {keywords}\n")
                     
                     print(f"Processed: {npy_filename}")
@@ -157,7 +152,7 @@ def extract_images_and_keywords(csv_file, output_folder):
                 print(f"Error processing {file_id}: {e}")
 
 
-# Example usage:
+
 # convert_npz_to_npy("/home/paperspace/Documents/nika_space/npz_raw/train_raw", "train_raw_challenge_npy")
 
 #RAISE dataset
@@ -174,87 +169,87 @@ def normalize_image(img_array):
     :param img_array: Input NumPy array
     :return: Normalized image array
     """
-    # Convert to float32
+
     raw_img = img_array.astype(np.float32)
     
-    # Find the max value for normalization
     raw_max = raw_img.max()
     
-    # Normalize by dividing by max value
     normalized_img = (raw_img / raw_max).astype(np.float32)
     
     return normalized_img
 
 
-def extract_images_and_keywords(csv_file, output_folder):
+
+import os
+import csv
+import io
+import requests
+import rawpy
+import numpy as np
+from tqdm import tqdm
+
+def extract_images_and_keywords2(csv_file, output_folder):
     """
-    Extract images, convert to normalized NumPy arrays, and save keywords.
-    
+    Extract NEF images, convert to RGGB NumPy arrays (4, H, W), and save keywords.
+
     :param csv_file: Path to the input CSV file
     :param output_folder: Folder to save extracted images and labels
     """
-    # Create output folders if they don't exist
     os.makedirs(output_folder, exist_ok=True)
     os.makedirs(os.path.join(output_folder, 'images'), exist_ok=True)
-    
-    # Path for the labels file
+
     labels_file_path = os.path.join(output_folder, 'labels.txt')
-    
-    # Open labels file in write mode
+
     with open(csv_file, 'r', encoding='utf-8') as input_file, \
          open(labels_file_path, 'w', encoding='utf-8') as labels_file:
-        
+
         csv_reader = csv.DictReader(input_file)
-        
-        # Process each row in the CSV
-        for row in csv_reader:
-            # Extract file identifier and keywords
+
+        for row in tqdm(csv_reader, desc="Loading"):
             file_id = row['File']
             keywords = row['Keywords']
-            
-            # NEF file URL (or TIFF if preferred)
             image_url = row['NEF']
-            
-            # Skip if no URL or keywords
+
             if not image_url or not keywords:
                 continue
-            
+
             try:
-                # Download the image file
                 response = requests.get(image_url)
-                
-                # Ensure successful download
+
                 if response.status_code == 200:
-                    # Open image from bytes
-                    with Image.open(io.BytesIO(response.content)) as img:
-                        # Convert image to NumPy array
-                        img_array = np.array(img)
-                        
-                        # Normalize the image
-                        img_normalized = normalize_image(img_array)
-                        
-                        # Construct NPY filename
+                    with rawpy.imread(io.BytesIO(response.content)) as raw:
+                        raw_image = raw.raw_image_visible.copy()
+                        raw_image = raw_image.astype(np.uint16)
+
+                        height, width = raw_image.shape
+                        rggb_image = np.zeros((height // 2, width // 2, 4), dtype=np.uint16)
+
+
+                        rggb_image[:, :, 0] = raw_image[0::2, 0::2]  # Red
+                        rggb_image[:, :, 1] = raw_image[0::2, 1::2]  # Green (first)
+                        rggb_image[:, :, 2] = raw_image[1::2, 0::2]  # Green (second)
+                        rggb_image[:, :, 3] = raw_image[1::2, 1::2]  # Blue
+
+                        # (4, H, W)
+                        rggb_image = np.transpose(rggb_image, (2, 0, 1))
+
                         npy_filename = f"{file_id}.npy"
                         npy_path = os.path.join(output_folder, 'images', npy_filename)
-                        
-                        # Save normalized NumPy array
-                        np.save(npy_path, img_normalized)
-                    
-                    # Write image filename and its keywords to labels file
+                        np.save(npy_path, rggb_image)
+
                     labels_file.write(f"{npy_filename} {keywords}\n")
-                    
                     print(f"Processed: {npy_filename}")
-                
+
             except Exception as e:
                 print(f"Error processing {file_id}: {e}")
 
 
+
+# csv_file_path = 'RAISE_383.csv'
+# output_folder = '/home/paperspace/Documents/nika_space/main_dataset/raise/'
+# extract_images_and_keywords(csv_file_path, output_folder)
+
+
 csv_file_path = 'RAISE_383.csv'
 output_folder = '/home/paperspace/Documents/nika_space/main_dataset/raise/'
-extract_images_and_keywords(csv_file_path, output_folder)
-
-# Additional notes:
-# 1. This script requires the 'requests' library. Install it using:
-#    pip install requests
-# 2. Ensure you have permission to download and use these images
-# 3. Replace 'your_metadata.csv' with the actual path to your CSV file
+extract_images_and_keywords2(csv_file_path, output_folder)
