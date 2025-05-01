@@ -59,19 +59,7 @@ Inspired by the **RAW Adapter** paper, this work integrates and modifies three k
 
 The project expects RGGB-formatted `.npy` images in the following structure:
 
-dataset/
-├── train/
-│   └── dataset_name/
-│       └── images/
-│           └── *.npy
-├── val/
-│   └── dataset_name/
-│       └── images/
-│           └── *.npy
-└── test/
-    └── dataset_name/
-        └── images/
-            └── *.npy
+<pre> ```plaintext dataset/ ├── train/ │ └── dataset_name/ │ └── images/ │ └── *.npy ├── val/ │ └── dataset_name/ │ └── images/ │ └── *.npy └── test/ └── dataset_name/ └── images/ └── *.npy ``` </pre>
 
 
 ---
@@ -84,22 +72,26 @@ dataset/
 python3 -m dinov2.train.train \
   --config-file dinov2/configs/train/custom.yaml \
   --output-dir lala3
-
+```
 
 ### Run Linear Classifier
+```bash
 python3 -m dinov2.eval.linear \
   --config-file dinov2/configs/eval/vitb14_pretrain.yaml \
   --pretrained-weights lala3/model_0010499.rank_0.pth \
   --output-dir lalaa3/
+```
 
 
 ### Run segmentation
+```bash
 CUDA_LAUNCH_BLOCKING=1 python3 -m dinov2.eval.segmentation2 \
   --train-dataset "Seg:root=/path/to/ADE20K/ADEChallengeData2016:split=train" \
   --val-dataset "Seg:root=/path/to/ADE20K/ADEChallengeData2016:split=val" \
   --pretrained-weights basic/model_0008999.rank_0.pth \
   --config-file dinov2/configs/eval/vitb14_pretrain.yaml \
   --output-dir seg_on_basic
+```
 
 ### Segmentation examples
 ![Segmentation Example 1](photo_2025-05-01_23-30-13.jpg)
