@@ -2,7 +2,7 @@
 
 This worked is done based on dinov2, so main code is in this submodule
 
-## aded files: 
+## added files: 
 
 congigs/train/custom.yaml
 
