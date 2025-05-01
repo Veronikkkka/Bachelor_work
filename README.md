@@ -1,162 +1,94 @@
-\documentclass[11pt]{article}
-\usepackage[utf8]{inputenc}
-\usepackage{geometry}
-\usepackage{listings}
-\usepackage{xcolor}
-\usepackage{graphicx}
-\usepackage{titlesec}
-\usepackage{hyperref}
-\usepackage{enumitem}
-\usepackage{caption}
+# 🧠 Bachelor Work
 
-\geometry{margin=1in}
-\titleformat{\section}{\Large\bfseries}{\thesection}{1em}{}
-\titleformat{\subsection}{\large\bfseries}{\thesubsection}{1em}{}
+This project builds on [DINOv2](https://github.com/facebookresearch/dinov2), with core functionality implemented in the `dinov2` submodule.
 
-\title{\textbf{Bachelor Work Report}}
-\author{}
-\date{}
+Inspired by the **RAW Adapter** paper, this work integrates and modifies three key components:
 
-\definecolor{codegray}{gray}{0.95}
-\lstset{
-  backgroundcolor=\color{codegray},
-  basicstyle=\ttfamily\small,
-  breaklines=true,
-  frame=single
-}
+- **Input-level Adapter**
+- **Model-level Adapter**
+- **Merge Blocks**
 
-\begin{document}
+---
 
-\maketitle
+## 📁 Added Files
 
-\section*{Overview}
+### **Configs**
+- `configs/train/custom.yaml`
 
-This work is based on \href{https://github.com/facebookresearch/dinov2}{DINOv2}, with the main implementation inside its submodule. Inspired by the RAW Adapter paper, the following concepts are adapted and modified:
+### **Data**
+- `data/datasets/augmentation_rggb.py`
+- `data/datasets/knn_for_main.py`
+- `data/datasets/main_dataset.py`
+- `data/datasets/my_dataset.py`
+- `data/datasets/npz_raw.py`
+- `data/datasets/pre_process_in_advance.py`
+- `data/datasets/pre_processor.py`
+- `data/datasets/raise_dataset.py`
+- `data/datasets/raw_nod.py`
 
-\begin{itemize}
-    \item Input-level adapter
-    \item Model-level adapter
-    \item Merge blocks
-\end{itemize}
+### **Evaluation**
+- `eval/segmentation1.py`
+- `eval/segmentation2.py`
 
-\section*{Added Files}
+### **Models**
+- `models/help.py`
+- `models/input_level_adapter.py`
 
-\subsection*{Configs}
-\begin{itemize}
-    \item \texttt{configs/train/custom.yaml}
-\end{itemize}
+### **Training**
+- `train/rgb_to_raw.py`
+- `train/knn.py`
+- `train/segmentation_head.py`
 
-\subsection*{Data}
-\begin{itemize}
-    \item \texttt{data/datasets/augmentation\_rggb.py}
-    \item \texttt{data/datasets/knn\_for\_main.py}
-    \item \texttt{data/datasets/main\_dataset.py}
-    \item \texttt{data/datasets/my\_dataset.py}
-    \item \texttt{data/datasets/npz\_raw.py}
-    \item \texttt{data/datasets/pre\_process\_in\_advance.py}
-    \item \texttt{data/datasets/pre\_processor.py}
-    \item \texttt{data/datasets/raise\_dataset.py}
-    \item \texttt{data/datasets/raw\_nod.py}
-\end{itemize}
+---
 
-\subsection*{Evaluation}
-\begin{itemize}
-    \item \texttt{eval/segmentation1.py}
-    \item \texttt{eval/segmentation2.py}
-\end{itemize}
+## 🛠️ Modified Files
 
-\subsection*{Models}
-\begin{itemize}
-    \item \texttt{models/help.py}
-    \item \texttt{models/input\_level\_adapter.py}
-\end{itemize}
+- `configs/eval/vitb14_pretrain.yaml`
+- `data/transforms.py`
+- `data/augmentations.py`
+- `data/loaders.py`
+- `eval/linear.py`
+- `eval/utils.py`
+- `models/vision_transformer.py`
+- `train/ssl_meta_arch.py`
+- `train/train.py`
 
-\subsection*{Training}
-\begin{itemize}
-    \item \texttt{train/rgb\_to\_raw.py}
-    \item \texttt{train/knn.py}
-    \item \texttt{train/segmentation\_head.py}
-\end{itemize}
+---
 
-\section*{Modified Files}
+## 🗂️ Dataset Structure
 
-\begin{itemize}
-    \item \texttt{configs/eval/vitb14\_pretrain.yaml}
-    \item \texttt{data/transforms.py}
-    \item \texttt{data/augmentations.py}
-    \item \texttt{data/loaders.py}
-    \item \texttt{eval/linear.py}
-    \item \texttt{eval/utils.py}
-    \item \texttt{models/vision\_transformer.py}
-    \item \texttt{train/ssl\_meta\_arch.py}
-    \item \texttt{train/train.py}
-\end{itemize}
+The project expects RGGB-formatted `.npy` images in the following structure:
 
-\section*{Dataset Structure}
+dataset/ ├── train/ │ └── dataset_name/ │ └── images/ │ └── *.npy ├── val/ │ └── dataset_name/ │ └── images/ │ └── *.npy └── test/ └── dataset_name/ └── images/ └── *.npy
 
-The program expects input images in \textbf{RGGB format} as \texttt{.npy} files in the following structure:
 
-\begin{lstlisting}
-dataset/
-├── train/
-│   └── dataset_name/
-│       └── images/
-│           └── *.npy
-├── val/
-│   └── dataset_name/
-│       └── images/
-│           └── *.npy
-└── test/
-    └── dataset_name/
-        └── images/
-            └── *.npy
-\end{lstlisting}
+---
 
-\section*{Commands}
+## 🧪 Commands
 
-\subsection*{Train Encoder}
-\begin{lstlisting}[language=bash]
+### 🚀 Train Encoder
+
+```bash
 python3 -m dinov2.train.train \
   --config-file dinov2/configs/train/custom.yaml \
   --output-dir lala3
-\end{lstlisting}
 
-\subsection*{Run Linear Classifier}
-\begin{lstlisting}[language=bash]
+
+### Run Linear Classifier
 python3 -m dinov2.eval.linear \
   --config-file dinov2/configs/eval/vitb14_pretrain.yaml \
   --pretrained-weights lala3/model_0010499.rank_0.pth \
   --output-dir lalaa3/
-\end{lstlisting}
 
-\subsection*{Run Segmentation}
-\begin{lstlisting}[language=bash]
+
+### Run segmentation
 CUDA_LAUNCH_BLOCKING=1 python3 -m dinov2.eval.segmentation2 \
   --train-dataset "Seg:root=/path/to/ADE20K/ADEChallengeData2016:split=train" \
   --val-dataset "Seg:root=/path/to/ADE20K/ADEChallengeData2016:split=val" \
   --pretrained-weights basic/model_0008999.rank_0.pth \
   --config-file dinov2/configs/eval/vitb14_pretrain.yaml \
   --output-dir seg_on_basic
-\end{lstlisting}
 
-\section*{Segmentation Examples}
-
-You can include example images of segmentation results here:
-
-\begin{figure}[h]
-    \centering
-    \fbox{\includegraphics[width=0.6\textwidth]{example_segmentation_1.png}}
-    \caption{Example Segmentation Result 1}
-\end{figure}
-
-\begin{figure}[h]
-    \centering
-    \fbox{\includegraphics[width=0.6\textwidth]{example_segmentation_2.png}}
-    \caption{Example Segmentation Result 2}
-\end{figure}
-
-\bigskip
-
-\noindent\textit{Note: Replace the image filenames with your actual segmentation output screenshots.}
-
-\end{document}
+### Segmentation examples
+![Segmentation Example 1](photo_2025-05-01_23-30-13.jpg)
+![Segmentation Example 2](photo_2025-05-01_23-30-11.jpg)
