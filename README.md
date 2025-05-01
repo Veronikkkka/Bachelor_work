@@ -112,3 +112,7 @@ CUDA_LAUNCH_BLOCKING=1 python3 -m dinov2.eval.segmentation2 \
 ### Segmentation examples
 ![Segmentation Example 1](photo_2025-05-01_23-30-13.jpg)
 ![Segmentation Example 2](photo_2025-05-01_23-30-11.jpg)
+
+
+### Note
+for evaluation of encoder(classifier, segmentation) labels needed, so only pictures with labels was used to train these decoders
