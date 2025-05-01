@@ -59,7 +59,23 @@ Inspired by the **RAW Adapter** paper, this work integrates and modifies three k
 
 The project expects RGGB-formatted `.npy` images in the following structure:
 
-<pre> ```plaintext dataset/ ├── train/ │ └── dataset_name/ │ └── images/ │ └── *.npy ├── val/ │ └── dataset_name/ │ └── images/ │ └── *.npy └── test/ └── dataset_name/ └── images/ └── *.npy ``` </pre>
+
+```plaintext
+dataset/
+├── train/
+│   └── dataset_name/
+│       └── images/
+│           └── *.npy
+├── val/
+│   └── dataset_name/
+│       └── images/
+│           └── *.npy
+└── test/
+    └── dataset_name/
+        └── images/
+            └── *.npy
+
+```
 
 
 ---
